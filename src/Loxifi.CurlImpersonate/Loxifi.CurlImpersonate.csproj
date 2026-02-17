@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- NuGet Package Properties -->
+    <PackageId>Loxifi.CurlImpersonate</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Loxifi</Authors>
+    <Description>A .NET wrapper around curl-impersonate providing browser fingerprint impersonation for HTTP requests. Implements an HttpClient-like API for seamless integration.</Description>
+    <PackageTags>curl;http;impersonate;fingerprint;browser;tls;anti-fingerprint</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Loxifi/Loxifi.CurlImpersonate</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>..\..\nupkg</PackageOutputPath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include native binaries in the package -->
+    <None Include="..\..\runtimes\**\*" Pack="true" PackagePath="runtimes" />
+    <None Include="..\..\build\**\*" Pack="true" PackagePath="build" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>
