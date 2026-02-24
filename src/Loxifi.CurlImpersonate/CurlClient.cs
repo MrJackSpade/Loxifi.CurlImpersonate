@@ -1,3 +1,4 @@
+using Loxifi.CurlImpersonate.Native;
 using System.Net;
 using System.Text.RegularExpressions;
 
