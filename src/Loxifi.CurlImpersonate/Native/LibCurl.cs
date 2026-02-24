@@ -51,37 +51,100 @@ namespace Loxifi.CurlImpersonate.Native
 
         // =================================================================
         // curl_easy_setopt overloads
+        // On Windows: use the standard curl_easy_setopt variadic function
+        // On Linux: use typed variants from our shim
         // =================================================================
 
         /// <summary>
         /// Set an option with a long/int value.
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_setopt_long")]
+        private static extern CurlCode curl_easy_setopt_long_linux(CurlHandle curl, CurlOption option, long value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, long value);
+        private static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, long value);
 
         /// <summary>
         /// Set an option with a string value.
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_setopt_str", CharSet = CharSet.Ansi)]
+        private static extern CurlCode curl_easy_setopt_str_linux(CurlHandle curl, CurlOption option, string value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, string value);
+        private static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, string value);
 
         /// <summary>
         /// Set an option with a pointer value (for callbacks, slists, etc).
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_setopt_ptr")]
+        private static extern CurlCode curl_easy_setopt_ptr_linux(CurlHandle curl, CurlOption option, IntPtr value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, IntPtr value);
+        private static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, IntPtr value);
 
         /// <summary>
-        /// Set an option with a delegate (for callbacks).
+        /// Set an option with a callback delegate (for write callbacks).
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_setopt_cb")]
+        private static extern CurlCode curl_easy_setopt_cb_linux(CurlHandle curl, CurlOption option, WriteCallback callback);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, WriteCallback callback);
+        private static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, WriteCallback callback);
 
         /// <summary>
-        /// Set an option with a delegate (for header callbacks).
+        /// Set an option with a callback delegate (for header callbacks).
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_setopt_cb")]
+        private static extern CurlCode curl_easy_setopt_cb_header_linux(CurlHandle curl, CurlOption option, HeaderCallback callback);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, HeaderCallback callback);
+        private static extern CurlCode curl_easy_setopt(CurlHandle curl, CurlOption option, HeaderCallback callback);
+
+        // Public wrappers that select the appropriate implementation
+        public static CurlCode SetOpt(CurlHandle curl, CurlOption option, long value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_setopt_long_linux(curl, option, value);
+            }
+            return curl_easy_setopt(curl, option, value);
+        }
+
+        public static CurlCode SetOpt(CurlHandle curl, CurlOption option, string value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_setopt_str_linux(curl, option, value);
+            }
+            return curl_easy_setopt(curl, option, value);
+        }
+
+        public static CurlCode SetOpt(CurlHandle curl, CurlOption option, IntPtr value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_setopt_ptr_linux(curl, option, value);
+            }
+            return curl_easy_setopt(curl, option, value);
+        }
+
+        public static CurlCode SetOpt(CurlHandle curl, CurlOption option, WriteCallback callback)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_setopt_cb_linux(curl, option, callback);
+            }
+            return curl_easy_setopt(curl, option, callback);
+        }
+
+        public static CurlCode SetOpt(CurlHandle curl, CurlOption option, HeaderCallback callback)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_setopt_cb_header_linux(curl, option, callback);
+            }
+            return curl_easy_setopt(curl, option, callback);
+        }
 
         // =================================================================
         // Perform and info
@@ -96,20 +159,57 @@ namespace Loxifi.CurlImpersonate.Native
         /// <summary>
         /// Get info as a string.
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_getinfo_str")]
+        private static extern CurlCode curl_easy_getinfo_str_linux(CurlHandle curl, CurlInfo info, out IntPtr value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out IntPtr value);
+        private static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out IntPtr value);
 
         /// <summary>
         /// Get info as a long.
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_getinfo_long")]
+        private static extern CurlCode curl_easy_getinfo_long_linux(CurlHandle curl, CurlInfo info, out long value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out long value);
+        private static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out long value);
 
         /// <summary>
         /// Get info as a double.
         /// </summary>
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "curl_easy_getinfo_double")]
+        private static extern CurlCode curl_easy_getinfo_double_linux(CurlHandle curl, CurlInfo info, out double value);
+
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out double value);
+        private static extern CurlCode curl_easy_getinfo(CurlHandle curl, CurlInfo info, out double value);
+
+        // Public wrappers for getinfo
+        public static CurlCode GetInfo(CurlHandle curl, CurlInfo info, out IntPtr value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_getinfo_str_linux(curl, info, out value);
+            }
+            return curl_easy_getinfo(curl, info, out value);
+        }
+
+        public static CurlCode GetInfo(CurlHandle curl, CurlInfo info, out long value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_getinfo_long_linux(curl, info, out value);
+            }
+            return curl_easy_getinfo(curl, info, out value);
+        }
+
+        public static CurlCode GetInfo(CurlHandle curl, CurlInfo info, out double value)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return curl_easy_getinfo_double_linux(curl, info, out value);
+            }
+            return curl_easy_getinfo(curl, info, out value);
+        }
 
         // =================================================================
         // curl-impersonate extension

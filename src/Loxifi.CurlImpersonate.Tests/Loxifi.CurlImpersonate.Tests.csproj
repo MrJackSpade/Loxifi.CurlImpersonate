@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,12 +23,18 @@
     <ProjectReference Include="..\Loxifi.CurlImpersonate\Loxifi.CurlImpersonate.csproj" />
   </ItemGroup>
 
-  <!-- Copy native curl files to output -->
+  <!-- Copy native curl files to output - Windows -->
   <ItemGroup>
     <None Include="..\..\runtimes\win-x64\native\curl.exe" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\curl.exe" />
     <None Include="..\..\runtimes\win-x64\native\libcurl.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\libcurl.dll" />
     <None Include="..\..\runtimes\win-x64\native\zlib.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\zlib.dll" />
     <None Include="..\..\runtimes\win-x64\native\cacert.pem" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\cacert.pem" />
+  </ItemGroup>
+
+  <!-- Copy native curl files to output - Linux (if built) -->
+  <ItemGroup Condition="Exists('..\..\runtimes\linux-x64\native\libcurl-impersonate.so')">
+    <None Include="..\..\runtimes\linux-x64\native\libcurl-impersonate.so" CopyToOutputDirectory="PreserveNewest" Link="runtimes\linux-x64\native\libcurl-impersonate.so" />
+    <None Include="..\..\runtimes\linux-x64\native\cacert.pem" CopyToOutputDirectory="PreserveNewest" Link="runtimes\linux-x64\native\cacert.pem" Condition="Exists('..\..\runtimes\linux-x64\native\cacert.pem')" />
   </ItemGroup>
 
 </Project>

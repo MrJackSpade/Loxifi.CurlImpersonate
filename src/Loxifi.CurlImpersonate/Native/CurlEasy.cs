@@ -47,7 +47,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetUrl(string url)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Url, url));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Url, url));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetMethod(string method)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.CustomRequest, method));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.CustomRequest, method));
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetFollowLocation(bool follow)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.FollowLocation, follow ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.FollowLocation, follow ? 1L : 0L));
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetMaxRedirects(int maxRedirects)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.MaxRedirs, maxRedirects));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.MaxRedirs, maxRedirects));
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTimeout(int seconds)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Timeout, seconds));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Timeout, seconds));
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTimeoutMs(int milliseconds)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TimeoutMs, milliseconds));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TimeoutMs, milliseconds));
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetSslVerifyPeer(bool verify)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslVerifyPeer, verify ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslVerifyPeer, verify ? 1L : 0L));
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetSslVerifyHost(bool verify)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslVerifyHost, verify ? 2L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslVerifyHost, verify ? 2L : 0L));
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetCaInfo(string path)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Cainfo, path));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Cainfo, path));
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetProxy(string proxyUrl)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Proxy, proxyUrl));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Proxy, proxyUrl));
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetProxyUserPassword(string userPassword)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.ProxyUserpwd, userPassword));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.ProxyUserpwd, userPassword));
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetCookie(string cookie)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Cookie, cookie));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Cookie, cookie));
         }
 
         /// <summary>
@@ -169,8 +169,8 @@ namespace Loxifi.CurlImpersonate.Native
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             _pinnedHandles.Add(handle);
 
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.PostFields, handle.AddrOfPinnedObject()));
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.PostFieldSize, data.Length));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.PostFields, handle.AddrOfPinnedObject()));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.PostFieldSize, data.Length));
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttpVersion(CurlHttpVersion version)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.HttpVersion, (long)version));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.HttpVersion, (long)version));
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetAcceptEncoding(string encoding)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.AcceptEncoding, encoding));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.AcceptEncoding, encoding));
         }
 
         // =================================================================
@@ -210,7 +210,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetCiphers(string ciphers)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslCipherList, ciphers));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslCipherList, ciphers));
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetCurves(string curves)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslEcCurves, curves));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslEcCurves, curves));
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttp2Settings(string settings)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Http2Settings, settings));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Http2Settings, settings));
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttp2WindowUpdate(int value)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Http2WindowUpdate, value));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Http2WindowUpdate, value));
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttp2StreamWeight(int weight)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.StreamWeight, weight));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.StreamWeight, weight));
         }
 
         /// <summary>
@@ -255,7 +255,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttp2StreamExclusive(bool exclusive)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.StreamExclusive, exclusive ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.StreamExclusive, exclusive ? 1L : 0L));
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetHttp2PseudoHeadersOrder(string order)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.Http2PseudoHeadersOrder, order));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.Http2PseudoHeadersOrder, order));
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetEnableAlps(bool enable)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslEnableAlps, enable ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslEnableAlps, enable ? 1L : 0L));
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetPermuteExtensions(bool enable)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslPermuteExtensions, enable ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslPermuteExtensions, enable ? 1L : 0L));
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetCertCompression(string algorithm)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslCertCompression, algorithm));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslCertCompression, algorithm));
         }
 
         /// <summary>
@@ -300,7 +300,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTlsGrease(bool enable)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TlsGrease, enable ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TlsGrease, enable ? 1L : 0L));
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTlsSignedCertTimestamps(bool enable)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TlsSignedCertTimestamps, enable ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TlsSignedCertTimestamps, enable ? 1L : 0L));
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetSignatureHashes(string hashes)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SslSigHashAlgs, hashes));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SslSigHashAlgs, hashes));
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetDelegatedCredentials(string credentials)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TlsDelegatedCredentials, credentials));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TlsDelegatedCredentials, credentials));
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTlsRecordSizeLimit(int limit)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TlsRecordSizeLimit, limit));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TlsRecordSizeLimit, limit));
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetTlsExtensionOrder(string order)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.TlsExtensionOrder, order));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.TlsExtensionOrder, order));
         }
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Loxifi.CurlImpersonate.Native
         public void SetSplitCookies(bool enable)
         {
             ThrowIfDisposed();
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.SplitCookies, enable ? 1L : 0L));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.SplitCookies, enable ? 1L : 0L));
         }
 
         // =================================================================
@@ -379,14 +379,14 @@ namespace Loxifi.CurlImpersonate.Native
             // Apply headers if any
             if (_headers != null && !_headers.IsInvalid)
             {
-                CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.HttpHeader, _headers.DangerousGetHandle()));
+                CheckResult(LibCurl.SetOpt(_handle, CurlOption.HttpHeader, _headers.DangerousGetHandle()));
             }
 
             // Perform the request
             CurlCode result = LibCurl.curl_easy_perform(_handle);
 
             // Get response code
-            LibCurl.curl_easy_getinfo(_handle, CurlInfo.ResponseCode, out long responseCode);
+            LibCurl.GetInfo(_handle, CurlInfo.ResponseCode, out long responseCode);
             ResponseCode = (int)responseCode;
 
             if (result != CurlCode.Ok)
@@ -506,7 +506,7 @@ namespace Loxifi.CurlImpersonate.Native
                 return (nuint)length;
             };
 
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.HeaderFunction, _headerCallback));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.HeaderFunction, _headerCallback));
         }
 
         private void SetupWriteCallback()
@@ -523,7 +523,7 @@ namespace Loxifi.CurlImpersonate.Native
                 return (nuint)length;
             };
 
-            CheckResult(LibCurl.curl_easy_setopt(_handle, CurlOption.WriteFunction, _writeCallback));
+            CheckResult(LibCurl.SetOpt(_handle, CurlOption.WriteFunction, _writeCallback));
         }
 
         private void ThrowIfDisposed()
