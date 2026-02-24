@@ -2,23 +2,44 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <CurlImpersonateNativePath>$(MSBuildThisFileDirectory)..\runtimes\win-x64\native\</CurlImpersonateNativePath>
+    <CurlImpersonateWindowsNativePath>$(MSBuildThisFileDirectory)..\runtimes\win-x64\native\</CurlImpersonateWindowsNativePath>
+    <CurlImpersonateLinuxNativePath>$(MSBuildThisFileDirectory)..\runtimes\linux-x64\native\</CurlImpersonateLinuxNativePath>
   </PropertyGroup>
 
-  <ItemGroup Condition="Exists('$(CurlImpersonateNativePath)')">
-    <None Include="$(CurlImpersonateNativePath)**\*.*">
+  <!-- Windows natives -->
+  <ItemGroup Condition="Exists('$(CurlImpersonateWindowsNativePath)')">
+    <None Include="$(CurlImpersonateWindowsNativePath)**\*.*">
       <Link>runtimes\win-x64\native\%(RecursiveDir)%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
-  <Target Name="CopyCurlImpersonateNatives" AfterTargets="Build" Condition="Exists('$(CurlImpersonateNativePath)')">
-    <ItemGroup>
-      <CurlImpersonateFiles Include="$(CurlImpersonateNativePath)**\*.*" />
+  <!-- Linux natives -->
+  <ItemGroup Condition="Exists('$(CurlImpersonateLinuxNativePath)')">
+    <None Include="$(CurlImpersonateLinuxNativePath)**\*.*">
+      <Link>runtimes\linux-x64\native\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyCurlImpersonateNatives" AfterTargets="Build">
+    <!-- Copy Windows natives -->
+    <ItemGroup Condition="Exists('$(CurlImpersonateWindowsNativePath)')">
+      <CurlImpersonateWindowsFiles Include="$(CurlImpersonateWindowsNativePath)**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(CurlImpersonateFiles)"
+    <Copy SourceFiles="@(CurlImpersonateWindowsFiles)"
           DestinationFolder="$(OutputPath)runtimes\win-x64\native\"
-          SkipUnchangedFiles="true" />
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(CurlImpersonateWindowsNativePath)')" />
+
+    <!-- Copy Linux natives -->
+    <ItemGroup Condition="Exists('$(CurlImpersonateLinuxNativePath)')">
+      <CurlImpersonateLinuxFiles Include="$(CurlImpersonateLinuxNativePath)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CurlImpersonateLinuxFiles)"
+          DestinationFolder="$(OutputPath)runtimes\linux-x64\native\"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(CurlImpersonateLinuxNativePath)')" />
   </Target>
 
 </Project>

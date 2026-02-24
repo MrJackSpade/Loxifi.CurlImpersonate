@@ -85,7 +85,7 @@ namespace Loxifi.CurlImpersonate.Native
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return "libcurl.dll";
+                return "libcurl-impersonate.dll";
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {

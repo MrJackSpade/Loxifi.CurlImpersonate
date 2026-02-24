@@ -1,6 +1,8 @@
 using Loxifi.CurlImpersonate.CodeGen;
 using SharpCompress.Archives.Tar;
+using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 internal class Program
 {
@@ -15,6 +17,7 @@ internal class Program
         string projectRoot = FindProjectRoot(codeGenDir);
         string libraryDir = Path.Combine(projectRoot, "src", "Loxifi.CurlImpersonate");
         string runtimesDir = Path.Combine(projectRoot, "runtimes", "win-x64", "native");
+        string linuxBuildScript = Path.Combine(projectRoot, "build", "linux", "build-shim.sh");
 
         Console.WriteLine($"Project root: {projectRoot}");
         Console.WriteLine($"Library dir: {libraryDir}");
@@ -191,6 +194,38 @@ internal class Program
             Console.WriteLine($"Successfully generated code for {profiles.Count} browser profiles!");
             Console.WriteLine($"Version: {release.TagName}");
 
+            // Build Linux library if WSL is available
+            Console.WriteLine();
+            Console.WriteLine("Checking for WSL to build Linux library...");
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && File.Exists(linuxBuildScript))
+            {
+                bool wslAvailable = await CheckWslAvailableAsync();
+                if (wslAvailable)
+                {
+                    Console.WriteLine("WSL detected. Building Linux library...");
+                    bool linuxBuildSuccess = await BuildLinuxLibraryAsync(linuxBuildScript);
+                    if (linuxBuildSuccess)
+                    {
+                        Console.WriteLine("Linux library built successfully!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("WARNING: Linux library build failed. See errors above.");
+                        Console.WriteLine("You can manually build it later by running: wsl bash build/linux/build-shim.sh");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("WSL not available. Skipping Linux library build.");
+                    Console.WriteLine("To build Linux library manually, install WSL and run: wsl bash build/linux/build-shim.sh");
+                }
+            }
+            else if (!File.Exists(linuxBuildScript))
+            {
+                Console.WriteLine($"Linux build script not found at: {linuxBuildScript}");
+            }
+
             return 0;
         }
         finally
@@ -231,6 +266,126 @@ internal class Program
 
             // Fall back to current directory
             return Environment.CurrentDirectory;
+        }
+
+        static async Task<bool> CheckWslAvailableAsync()
+        {
+            try
+            {
+                using Process process = new()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "wsl",
+                        Arguments = "--status",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                await process.WaitForExitAsync();
+                return process.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static async Task<bool> BuildLinuxLibraryAsync(string buildScript)
+        {
+            try
+            {
+                // Convert Windows path to WSL path
+                string wslPath = ConvertToWslPath(buildScript);
+
+                // First fix line endings
+                Console.WriteLine("  Fixing line endings...");
+                using (Process sedProcess = new()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "wsl",
+                        Arguments = $"sed -i 's/\\r$//' \"{wslPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                })
+                {
+                    sedProcess.Start();
+                    await sedProcess.WaitForExitAsync();
+                }
+
+                // Run the build script
+                Console.WriteLine("  Running build script...");
+                using Process process = new()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "wsl",
+                        Arguments = $"bash \"{wslPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.OutputDataReceived += (sender, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        Console.WriteLine($"  {e.Data}");
+                    }
+                };
+
+                process.ErrorDataReceived += (sender, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        Console.WriteLine($"  ERROR: {e.Data}");
+                    }
+                };
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                // Wait up to 5 minutes for the build
+                bool completed = await Task.Run(() => process.WaitForExit(300000));
+
+                if (!completed)
+                {
+                    Console.WriteLine("  Build timed out after 5 minutes");
+                    try { process.Kill(); } catch { }
+                    return false;
+                }
+
+                return process.ExitCode == 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  Exception during build: {ex.Message}");
+                return false;
+            }
+        }
+
+        static string ConvertToWslPath(string windowsPath)
+        {
+            // Convert C:\path\to\file to /mnt/c/path/to/file
+            if (windowsPath.Length >= 2 && windowsPath[1] == ':')
+            {
+                char drive = char.ToLower(windowsPath[0]);
+                string rest = windowsPath[2..].Replace('\\', '/');
+                return $"/mnt/{drive}{rest}";
+            }
+
+            return windowsPath.Replace('\\', '/');
         }
     }
 }

@@ -25,8 +25,7 @@
 
   <!-- Copy native curl files to output - Windows -->
   <ItemGroup>
-    <None Include="..\..\runtimes\win-x64\native\curl.exe" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\curl.exe" />
-    <None Include="..\..\runtimes\win-x64\native\libcurl.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\libcurl.dll" />
+    <None Include="..\..\runtimes\win-x64\native\libcurl-impersonate.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\libcurl-impersonate.dll" />
     <None Include="..\..\runtimes\win-x64\native\zlib.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\zlib.dll" />
     <None Include="..\..\runtimes\win-x64\native\cacert.pem" CopyToOutputDirectory="PreserveNewest" Link="runtimes\win-x64\native\cacert.pem" />
   </ItemGroup>
