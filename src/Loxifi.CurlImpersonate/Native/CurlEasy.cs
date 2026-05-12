@@ -24,6 +24,7 @@ namespace Loxifi.CurlImpersonate.Native
 
         // Response data collectors
         private MemoryStream? _responseBody;
+        private Stream? _responseStream;
         private StringBuilder? _responseHeaders;
 
         public CurlEasy()
@@ -364,12 +365,18 @@ namespace Loxifi.CurlImpersonate.Native
         /// <summary>
         /// Performs the HTTP request and returns the response.
         /// </summary>
-        public CurlResponse Perform()
+        /// <param name="responseStream">
+        /// When supplied, the response body is written directly to this stream as it
+        /// arrives and <see cref="CurlResponse.Body"/> is returned empty. When null,
+        /// the body is buffered in memory.
+        /// </param>
+        public CurlResponse Perform(Stream? responseStream = null)
         {
             ThrowIfDisposed();
 
             // Set up response collectors
-            _responseBody = new MemoryStream();
+            _responseStream = responseStream;
+            _responseBody = responseStream == null ? new MemoryStream() : null;
             _responseHeaders = new StringBuilder();
 
             // Set up callbacks
@@ -398,7 +405,7 @@ namespace Loxifi.CurlImpersonate.Native
             return new CurlResponse
             {
                 StatusCode = ResponseCode,
-                Body = _responseBody.ToArray(),
+                Body = _responseBody?.ToArray() ?? [],
                 RawHeaders = _responseHeaders.ToString()
             };
         }
@@ -428,6 +435,7 @@ namespace Loxifi.CurlImpersonate.Native
             _writeCallback = null;
             _headerCallback = null;
             _responseBody = null;
+            _responseStream = null;
             _responseHeaders = null;
 
             // Reset the curl handle
@@ -514,11 +522,23 @@ namespace Loxifi.CurlImpersonate.Native
             _writeCallback = (ptr, size, nmemb, userdata) =>
             {
                 int length = (int)(size * nmemb);
-                if (length > 0 && _responseBody != null)
+                if (length > 0)
                 {
-                    byte[] buffer = new byte[length];
-                    Marshal.Copy(ptr, buffer, 0, length);
-                    _responseBody.Write(buffer, 0, length);
+                    Stream? sink = _responseStream ?? _responseBody;
+                    if (sink != null)
+                    {
+                        byte[] buffer = new byte[length];
+                        Marshal.Copy(ptr, buffer, 0, length);
+                        try
+                        {
+                            sink.Write(buffer, 0, length);
+                        }
+                        catch
+                        {
+                            // Returning a short count aborts the transfer with CURLE_WRITE_ERROR.
+                            return 0;
+                        }
+                    }
                 }
                 return (nuint)length;
             };

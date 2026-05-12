@@ -117,7 +117,7 @@ namespace Loxifi.CurlImpersonate.Native
             // Perform the request
             try
             {
-                CurlResponse response = curl.Perform();
+                CurlResponse response = curl.Perform(request.ResponseStream);
 
                 return new CurlResult
                 {

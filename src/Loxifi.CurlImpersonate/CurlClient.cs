@@ -224,9 +224,43 @@ namespace Loxifi.CurlImpersonate
         }
 
         /// <summary>
+        /// Send a GET request and stream the response body directly into <paramref name="destination"/>
+        /// without buffering it in memory. Use this for large downloads.
+        /// </summary>
+        public Task<HttpResponseMessage> DownloadAsync(string requestUri, Stream destination, CancellationToken cancellationToken = default)
+        {
+            return this.DownloadAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), destination, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a GET request and stream the response body directly into <paramref name="destination"/>
+        /// without buffering it in memory. Use this for large downloads.
+        /// </summary>
+        public Task<HttpResponseMessage> DownloadAsync(Uri requestUri, Stream destination, CancellationToken cancellationToken = default)
+        {
+            return this.DownloadAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), destination, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send an HTTP request and stream the response body directly into <paramref name="destination"/>
+        /// without buffering it in memory. The returned <see cref="HttpResponseMessage"/> has the status
+        /// and headers populated but an empty <see cref="HttpResponseMessage.Content"/>.
+        /// </summary>
+        public Task<HttpResponseMessage> DownloadAsync(HttpRequestMessage request, Stream destination, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(destination);
+            return this.SendAsyncCore(request, destination, cancellationToken);
+        }
+
+        /// <summary>
         /// Send an HTTP request as an asynchronous operation.
         /// </summary>
-        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+        {
+            return this.SendAsyncCore(request, responseStream: null, cancellationToken);
+        }
+
+        private async Task<HttpResponseMessage> SendAsyncCore(HttpRequestMessage request, Stream? responseStream, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -288,7 +322,8 @@ namespace Loxifi.CurlImpersonate
                 Insecure = Insecure,
                 CookieHeader = cookieHeader,
                 ProxyUrl = proxyUrl,
-                ProxyUserPassword = proxyUserPassword
+                ProxyUserPassword = proxyUserPassword,
+                ResponseStream = responseStream
             };
 
             CurlResult result = await _curlProcess.ExecuteAsync(curlRequest, cancellationToken);

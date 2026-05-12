@@ -21,6 +21,13 @@ namespace Loxifi.CurlImpersonate.Native
 
         public string? ProxyUserPassword { get; init; }
 
+        /// <summary>
+        /// When set, the response body is written directly to this stream as it
+        /// arrives instead of being buffered in memory. Used for streaming large
+        /// downloads that would otherwise exceed the 2 GB MemoryStream limit.
+        /// </summary>
+        public Stream? ResponseStream { get; init; }
+
         public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(100);
 
         public required string Url { get; init; }
