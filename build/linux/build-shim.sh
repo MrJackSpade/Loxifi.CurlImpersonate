@@ -26,7 +26,18 @@ case "$ARCH" in
 esac
 
 NATIVE_DIR="$RUNTIMES_DIR/$RID/native"
-VERSION="1.5.0"
+
+# Keep the Linux build in sync with whatever version the code generator last
+# produced. The generated BrowserProfile.cs header records the source version
+# ("// Source: curl-impersonate v1.5.6"). Allow an explicit override via the
+# CURL_IMPERSONATE_VERSION environment variable.
+GENERATED_HEADER="$SCRIPT_DIR/../../src/Loxifi.CurlImpersonate/BrowserProfile.cs"
+VERSION="${CURL_IMPERSONATE_VERSION:-$(grep -oiE 'curl-impersonate v[0-9]+\.[0-9]+\.[0-9]+' "$GENERATED_HEADER" 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')}"
+if [ -z "$VERSION" ]; then
+    echo "ERROR: could not determine curl-impersonate version (set CURL_IMPERSONATE_VERSION)"
+    exit 1
+fi
+echo "Target curl-impersonate version: $VERSION"
 DOWNLOAD_URL="https://github.com/lexiforest/curl-impersonate/releases/download/v${VERSION}/libcurl-impersonate-v${VERSION}.${DOWNLOAD_ARCH}.tar.gz"
 
 echo "Building libcurl-impersonate shim for $RID..."

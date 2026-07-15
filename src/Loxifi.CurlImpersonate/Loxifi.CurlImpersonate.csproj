@@ -8,7 +8,7 @@
 
     <!-- NuGet Package Properties -->
     <PackageId>Loxifi.CurlImpersonate</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>Loxifi</Authors>
     <Description>A .NET wrapper around curl-impersonate providing browser fingerprint impersonation for HTTP requests. Implements an HttpClient-like API for seamless integration.</Description>
     <PackageTags>curl;http;impersonate;fingerprint;browser;tls;anti-fingerprint</PackageTags>
