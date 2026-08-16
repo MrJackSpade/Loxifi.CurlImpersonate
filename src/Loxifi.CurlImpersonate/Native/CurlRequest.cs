@@ -5,6 +5,8 @@ namespace Loxifi.CurlImpersonate.Native
     /// </summary>
     internal sealed class CurlRequest
     {
+        public bool AllowAutoRedirect { get; init; } = true;
+
         public byte[]? Body { get; init; }
 
         public string? CookieHeader { get; init; }

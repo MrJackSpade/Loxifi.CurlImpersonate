@@ -184,6 +184,32 @@ namespace Loxifi.CurlImpersonate.Tests
 
         #endregion HTTP Method Tests
 
+        #region Redirect Tests
+
+        [Fact]
+        public async Task GetAsync_DefaultBehavior_FollowsRedirect()
+        {
+            using CurlClient client = CreateClient();
+
+            HttpResponseMessage response = await client.GetAsync("https://httpbin.org/redirect-to?url=/get");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetAsync_AutoRedirectDisabled_ReturnsRedirectResponse()
+        {
+            using CurlClient client = CreateClient();
+            client.AllowAutoRedirect = false;
+
+            HttpResponseMessage response = await client.GetAsync("https://httpbin.org/redirect-to?url=/get");
+
+            Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+            Assert.Equal("/get", response.Headers.Location?.OriginalString);
+        }
+
+        #endregion Redirect Tests
+
         #region Insecure Mode Tests
 
         [Fact]

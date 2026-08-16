@@ -37,6 +37,12 @@ namespace Loxifi.CurlImpersonate
         public Uri? BaseAddress { get; set; }
 
         /// <summary>
+        /// Gets or sets whether requests automatically follow redirect responses.
+        /// Default is true.
+        /// </summary>
+        public bool AllowAutoRedirect { get; set; } = true;
+
+        /// <summary>
         /// Gets the cookie container used for storing cookies across requests.
         /// </summary>
         public CookieContainer CookieContainer { get; } = new();
@@ -313,6 +319,7 @@ namespace Loxifi.CurlImpersonate
 
             CurlRequest curlRequest = new()
             {
+                AllowAutoRedirect = AllowAutoRedirect,
                 Method = request.Method.Method,
                 Url = url,
                 Profile = _profileConfig,

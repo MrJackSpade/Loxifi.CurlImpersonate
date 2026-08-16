@@ -63,7 +63,7 @@ namespace Loxifi.CurlImpersonate.Native
             // Basic request setup
             curl.SetUrl(request.Url);
             curl.SetMethod(request.Method);
-            curl.SetFollowLocation(true);
+            curl.SetFollowLocation(request.AllowAutoRedirect);
 
             // Timeout
             if (request.Timeout.TotalMilliseconds > 0)

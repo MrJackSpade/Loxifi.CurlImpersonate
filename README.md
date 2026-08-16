@@ -36,6 +36,7 @@ string content = await response.Content.ReadAsStringAsync();
 - **HttpClient-compatible API** - Familiar methods like `GetAsync`, `PostAsync`, `SendAsync`
 - **31 Browser Profiles** - Chrome, Firefox, Safari, Edge, and Tor profiles
 - **Cookie Support** - Automatic cookie handling with `CookieContainer`
+- **Redirect Control** - Follow redirects automatically or inspect 3xx responses directly
 - **Proxy Support** - HTTP/HTTPS proxy with authentication
 - **SSL Certificate Handling** - Includes CA certificate bundle for production use
 - **Auto-updating Profiles** - Code generator tool to pull latest curl-impersonate releases
@@ -62,6 +63,25 @@ var content = new StringContent(
 );
 
 HttpResponseMessage response = await client.PostAsync("https://api.example.com/login", content);
+```
+
+### Inspecting Redirect Responses
+
+Redirects are followed automatically by default. Disable automatic redirects to inspect the
+original status code and `Location` header:
+
+```csharp
+using var client = new CurlClient(BrowserProfile.Chrome131)
+{
+    AllowAutoRedirect = false
+};
+
+HttpResponseMessage response = await client.GetAsync("https://example.com/redirect");
+
+if (response.StatusCode == HttpStatusCode.Found)
+{
+    Uri? destination = response.Headers.Location;
+}
 ```
 
 ### Custom Headers
