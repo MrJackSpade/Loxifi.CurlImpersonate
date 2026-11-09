@@ -342,107 +342,49 @@ namespace Loxifi.CurlImpersonate
             return response;
         }
 
-        private static bool IsContentHeader(string name)
-        {
-            return name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Length", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Language", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Location", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Disposition", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-MD5", StringComparison.OrdinalIgnoreCase) ||
-                   name.Equals("Content-Range", StringComparison.OrdinalIgnoreCase);
-        }
-
         private static HttpResponseMessage ParseResponse(CurlResult result, Uri requestUri)
         {
-            HttpResponseMessage response = new();
-
-            // Parse headers
             string[] headerLines = result.RawHeaders.Split(["\r\n", "\n"], StringSplitOptions.None);
-            string lastStatusLine = string.Empty;
 
-            // Find the last status line (to handle redirects)
-            foreach (string line in headerLines)
+            // With redirects curl reports every response in the chain; the final one starts at the last status line.
+            int lastStatusIndex = -1;
+            for (int i = 0; i < headerLines.Length; i++)
             {
-                if (StatusLineRegex().IsMatch(line))
+                if (StatusLineRegex().IsMatch(headerLines[i]))
                 {
-                    lastStatusLine = line;
+                    lastStatusIndex = i;
                 }
             }
 
-            // Parse status code from the last status line
-            Match statusMatch = StatusLineRegex().Match(lastStatusLine);
-            if (statusMatch.Success)
-            {
-                response.StatusCode = (HttpStatusCode)int.Parse(statusMatch.Groups[1].Value);
-                response.ReasonPhrase = statusMatch.Groups[2].Value;
-            }
-            else
+            HttpResponseMessage response = new() { Content = new ByteArrayContent(result.Body) };
+            if (lastStatusIndex < 0)
             {
                 response.StatusCode = HttpStatusCode.OK;
+                return response;
             }
 
-            // Parse header values (from last response block)
-            bool inLastResponse = false;
-            foreach (string line in headerLines)
+            Match statusMatch = StatusLineRegex().Match(headerLines[lastStatusIndex]);
+            response.StatusCode = (HttpStatusCode)int.Parse(statusMatch.Groups[1].Value);
+            response.ReasonPhrase = statusMatch.Groups[2].Value;
+
+            for (int i = lastStatusIndex + 1; i < headerLines.Length; i++)
             {
-                if (StatusLineRegex().IsMatch(line))
-                {
-                    inLastResponse = line == lastStatusLine;
-                    continue;
-                }
-
-                if (!inLastResponse || string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-
+                string line = headerLines[i];
                 int colonIndex = line.IndexOf(':');
-                if (colonIndex > 0)
+                if (colonIndex <= 0)
                 {
-                    string name = line[..colonIndex].Trim();
-                    string value = line[(colonIndex + 1)..].Trim();
-
-                    // Try to add as content header first, then as response header
-                    if (!response.Content?.Headers.TryAddWithoutValidation(name, value) ?? true)
-                    {
-                        response.Headers.TryAddWithoutValidation(name, value);
-                    }
-                }
-            }
-
-            // Set content
-            response.Content = new ByteArrayContent(result.Body);
-
-            // Re-parse content headers
-            foreach (string line in headerLines)
-            {
-                if (StatusLineRegex().IsMatch(line))
-                {
-                    inLastResponse = line == lastStatusLine;
-                    continue;
+                    continue; // blank separator line
                 }
 
-                if (!inLastResponse || string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
+                string name = line[..colonIndex].Trim();
+                string value = line[(colonIndex + 1)..].Trim();
 
-                int colonIndex = line.IndexOf(':');
-                if (colonIndex > 0)
+                // HttpResponseHeaders refuses content headers (Content-Type, Last-Modified, Expires, ...) and
+                // HttpContentHeaders refuses response headers, so each header lands in exactly one collection.
+                if (!response.Headers.TryAddWithoutValidation(name, value) &&
+                    !response.Content.Headers.TryAddWithoutValidation(name, value))
                 {
-                    string name = line[..colonIndex].Trim();
-                    string value = line[(colonIndex + 1)..].Trim();
-
-                    if (IsContentHeader(name))
-                    {
-                        response.Content.Headers.TryAddWithoutValidation(name, value);
-                    }
-                    else
-                    {
-                        response.Headers.TryAddWithoutValidation(name, value);
-                    }
+                    throw new FormatException($"Invalid response header from {requestUri}: '{line}'");
                 }
             }
 
