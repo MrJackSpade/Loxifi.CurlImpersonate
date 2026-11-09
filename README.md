@@ -233,6 +233,18 @@ This will:
 
 The Linux library is built separately with `build/linux/build-shim.sh` on a Linux machine (see `build/linux/README.md`); it builds the version recorded in the generated `BrowserProfile.cs`.
 
+## Releasing
+
+`.github/workflows/publish.yml` tests every push and PR on Windows and Linux. Pushing a version tag publishes it to nuget.org through NuGet Trusted Publishing (no stored API key):
+
+```bash
+# after bumping <Version> in src/Loxifi.CurlImpersonate/Loxifi.CurlImpersonate.csproj
+git tag v2.0.0
+git push origin v2.0.0
+```
+
+The tag must match `<Version>` or the publish job fails. One-time setup on nuget.org: *Account > Trusted Publishing*, policy for owner `MrJackSpade`, repository `Loxifi.CurlImpersonate`, workflow file `publish.yml`.
+
 ## Platform Support
 
 - **Windows x64** (`win-x64`)

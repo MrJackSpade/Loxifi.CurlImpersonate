@@ -1,0 +1,7 @@
+# Shell scripts run on Linux: always LF, even when checked out on Windows.
+*.sh text eol=lf
+
+# Native libraries are shipped byte-for-byte in the NuGet package.
+*.dll binary
+*.so binary
+*.so.* binary

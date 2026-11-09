@@ -1,0 +1,75 @@
+# Tests on Windows and Linux for every push/PR to master. Pushing a version tag (v2.0.0, ...) also
+# publishes that version to nuget.org via NuGet Trusted Publishing: GitHub's OIDC token is exchanged
+# for a short-lived API key at run time, so no long-lived key is stored anywhere.
+#
+# One-time setup on nuget.org (Account > Trusted Publishing > Create policy):
+#   Repository owner: MrJackSpade   Repository: Loxifi.CurlImpersonate   Workflow file: publish.yml
+name: Test and publish
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test (native libraries from runtimes/)
+        run: dotnet test Loxifi.CurlImpersonate.sln -c Release
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required to request the OIDC token for Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check tag matches package version
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(dotnet msbuild src/Loxifi.CurlImpersonate/Loxifi.CurlImpersonate.csproj -getProperty:Version)"
+          echo "tag: $tag_version  package: $package_version"
+          if [ "$tag_version" != "$package_version" ]; then
+            echo "::error::Tag v$tag_version does not match <Version>$package_version</Version> in the csproj"
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
+
+      - name: Build package
+        run: dotnet build src/Loxifi.CurlImpersonate/Loxifi.CurlImpersonate.csproj -c Release
+
+      - name: NuGet login (Trusted Publishing)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: mrjackspade
+
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "nupkg/Loxifi.CurlImpersonate.${{ env.PACKAGE_VERSION }}.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
