@@ -162,26 +162,28 @@ client.Insecure = true;
 
 ## Available Browser Profiles
 
+Generated from curl-impersonate v2.3.2. Each profile applies that browser's exact TLS ClientHello, HTTP/2 settings and default headers.
+
 ### Chrome
-- `Chrome99`, `Chrome99Android`
-- `Chrome100`, `Chrome101`, `Chrome104`, `Chrome107`
-- `Chrome110`, `Chrome116`, `Chrome119`, `Chrome120`
-- `Chrome123`, `Chrome124`, `Chrome131`, `Chrome131Android`
-- `Chrome133a`, `Chrome136`
+- `Chrome99`, `Chrome99Android`, `Chrome100`, `Chrome101`, `Chrome104`, `Chrome107`
+- `Chrome110`, `Chrome116`, `Chrome119`, `Chrome120`, `Chrome123`, `Chrome124`
+- `Chrome131`, `Chrome131Android`, `Chrome133a`, `Chrome136`, `Chrome142`, `Chrome145`, `Chrome146`
+- `Chrome150`, `Chrome151`, `Chrome151Macos`, `Chrome152`, `Chrome152Macos`
 
 ### Firefox
-- `Firefox133`, `Firefox135`
+- `Firefox133`, `Firefox135`, `Firefox144`, `Firefox147`, `Firefox153`, `Firefox154`, `Firefox155`
 
 ### Safari
-- `Safari153`, `Safari155`, `Safari170`
-- `Safari172iOS`, `Safari180`, `Safari180iOS`
-- `Safari184`, `Safari184iOS`, `Safari260`, `Safari260iOS`
+- `Safari153`, `Safari155`, `Safari170`, `Safari172Ios`, `Safari180`, `Safari180Ios`
+- `Safari184`, `Safari184Ios`, `Safari260`, `Safari260Ios`, `Safari270`, `Safari270Ios`
 
 ### Edge
 - `Edge99`, `Edge101`
 
 ### Tor
 - `Tor145`
+
+Headers set through `DefaultRequestHeaders` or on the request replace the browser's default header of the same name in place, so the browser's header order is kept. Use this to match a specific browser build, e.g. a newer Edge: `User-Agent`, `sec-ch-ua`, `sec-ch-ua-platform`.
 
 ## API Reference
 
@@ -190,7 +192,8 @@ client.Insecure = true;
 | Property | Type | Description |
 |----------|------|-------------|
 | `BaseAddress` | `Uri?` | Base URI for relative requests |
-| `Timeout` | `TimeSpan` | Request timeout (default: 100 seconds) |
+| `AllowAutoRedirect` | `bool` | Follow redirects automatically (default: true) |
+| `Timeout` | `TimeSpan` | Request timeout (default: 100 seconds; `TimeSpan.Zero` disables it) |
 | `DefaultRequestHeaders` | `IDictionary<string, string>` | Headers sent with every request |
 | `CookieContainer` | `CookieContainer` | Cookie storage for the client |
 | `UseCookies` | `bool` | Enable/disable cookie handling (default: true) |
@@ -211,36 +214,37 @@ client.Insecure = true;
 
 ## Updating Browser Profiles
 
-This library includes a code generator tool that automatically pulls the latest curl-impersonate release from GitHub and regenerates the browser profile code.
-
-To update to the latest profiles:
+The code generator pulls a curl-impersonate release from GitHub, updates the bundled Windows library, and regenerates the profile code.
 
 ```bash
 # Windows
 Update.bat
 
-# Or manually
+# Or manually (latest release, or pin one with --version)
 dotnet run --project src/Loxifi.CurlImpersonate.CodeGen
+dotnet run --project src/Loxifi.CurlImpersonate.CodeGen -- --version v2.3.2
 ```
 
 This will:
-1. Download the latest curl-impersonate release
-2. Extract the native binaries and bat files
-3. Parse the bat files to extract browser fingerprint settings
-4. Generate updated `BrowserProfile.cs` and `BrowserProfileSettings.cs`
+1. Download the release's `libcurl-impersonate` (DLL) and `curl-impersonate` (CLI) Windows x64 archives
+2. Extract `libcurl-impersonate.dll` into `runtimes/win-x64/native` and download a fresh `cacert.pem`
+3. Read the supported impersonation targets from the CLI's `curl_<target>.bat` file names
+4. Generate `BrowserProfile.cs` and `BrowserProfileTargets.cs`
+
+The Linux library is built separately with `build/linux/build-shim.sh` on a Linux machine (see `build/linux/README.md`); it builds the version recorded in the generated `BrowserProfile.cs`.
 
 ## Platform Support
 
-Currently supports:
 - **Windows x64** (`win-x64`)
+- **Linux x64** (`linux-x64`)
 
-The native curl-impersonate binaries are included in the NuGet package and automatically copied to the output directory.
+The native libraries are included in the NuGet package and automatically copied to the output directory.
 
 ## How It Works
 
-1. **Browser Profile Selection**: Each profile contains the exact TLS ciphers, curves, HTTP/2 settings, and headers used by that browser version.
+1. **Browser Profile Selection**: Each `BrowserProfile` maps to a curl-impersonate target name (e.g. `chrome146`).
 
-2. **curl-impersonate Execution**: Requests are executed via the bundled curl-impersonate binary with the appropriate flags.
+2. **Native Impersonation**: Every request calls libcurl-impersonate's `curl_easy_impersonate` with that target, which applies the browser's TLS fingerprint, HTTP/2 settings and default headers natively. Your headers are then layered on top.
 
 3. **Response Parsing**: The curl output is parsed and converted to standard `HttpResponseMessage` objects.
 

@@ -17,7 +17,10 @@ namespace Loxifi.CurlImpersonate.Native
 
         public required string Method { get; init; }
 
-        public required ProfileConfig Profile { get; init; }
+        /// <summary>
+        /// curl-impersonate target name (e.g. "chrome146"), passed to curl_easy_impersonate.
+        /// </summary>
+        public required string ImpersonateTarget { get; init; }
 
         public string? ProxyUrl { get; init; }
 

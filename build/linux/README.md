@@ -18,18 +18,17 @@ wsl --install -d Ubuntu
 
 ### Build Dependencies
 
-Install the required build tools in your Linux environment (WSL or native Linux):
+The build needs gcc, binutils (`nm`, `readelf`), `ldd` and curl:
 
 ```bash
 # Ubuntu/Debian
-sudo apt update
-sudo apt install -y build-essential curl zlib1g-dev
+sudo apt install -y build-essential curl
 
 # Fedora/RHEL
-sudo dnf install -y gcc make curl zlib-devel
+sudo dnf install -y gcc binutils curl
 
 # Arch Linux
-sudo pacman -S base-devel curl zlib
+sudo pacman -S base-devel curl
 ```
 
 ## Building the Library
@@ -48,19 +47,25 @@ wsl bash build/linux/build-shim.sh
 bash build/linux/build-shim.sh
 ```
 
+To build from an archive you already downloaded (e.g. on a machine whose network is slow), pass it in:
+
+```bash
+CURL_IMPERSONATE_ARCHIVE=/path/to/libcurl-impersonate-v2.3.2.x86_64-linux-gnu.tar.gz bash build/linux/build-shim.sh
+```
+
 ### What the Build Script Does
 
-1. Downloads the pre-built static `libcurl-impersonate.a` from the [curl-impersonate releases](https://github.com/lexiforest/curl-impersonate/releases)
-2. Creates a C shim that wraps the hidden symbols with exported wrappers
-3. Links everything into a shared library `libcurl-impersonate.so`
-4. Copies the resulting library to `runtimes/linux-x64/native/` (or `linux-arm64` on ARM)
+1. Gets `libcurl-impersonate-v<version>.<arch>.tar.gz` from the [curl-impersonate releases](https://github.com/lexiforest/curl-impersonate/releases) (the version recorded in the generated `BrowserProfile.cs`, or `CURL_IMPERSONATE_VERSION`)
+2. Checks that upstream's shared library `libcurl-impersonate.so.4` exports every function the C# side calls
+3. Builds a thin shim, `libcurl-impersonate.so`, exporting fixed-signature wrappers for curl's variadic functions (`curl_easy_setopt_long`, `curl_easy_getinfo_str`, ...), which P/Invoke cannot call portably on Linux. The shim depends on `libcurl-impersonate.so.4` with RUNPATH `$ORIGIN`; every other function resolves from upstream's library directly
+4. Verifies the shim (dependency, RUNPATH, exports, and that it references only the real variadic functions, so no wrapper can call itself) and that it loads with no unresolved dependencies
+5. Installs both libraries and `cacert.pem` to `runtimes/linux-x64/native/` (or `linux-arm64` on ARM)
 
 ## Output
 
-After a successful build, you'll find:
-
-- `runtimes/linux-x64/native/libcurl-impersonate.so` - The shared library for x64 Linux
-- `runtimes/linux-x64/native/cacert.pem` - CA certificates (copied from Windows runtime if available)
+- `runtimes/linux-x64/native/libcurl-impersonate.so` - the shim the .NET library loads
+- `runtimes/linux-x64/native/libcurl-impersonate.so.4` - upstream curl-impersonate, loaded by the shim
+- `runtimes/linux-x64/native/cacert.pem` - CA certificates (copied from the Windows runtime)
 
 ## Running Tests
 
@@ -73,7 +78,7 @@ To run .NET tests in WSL, install the .NET SDK:
 wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 sudo dpkg -i packages-microsoft-prod.deb
 sudo apt update
-sudo apt install -y dotnet-sdk-8.0
+sudo apt install -y dotnet-sdk-10.0
 ```
 
 ### Running Tests
@@ -91,13 +96,6 @@ dotnet test
 
 ## Troubleshooting
 
-### "Cannot find -lz"
-
-Install zlib development package:
-```bash
-sudo apt install zlib1g-dev
-```
-
 ### "gcc: command not found"
 
 Install build tools:
@@ -107,14 +105,8 @@ sudo apt install build-essential
 
 ### Library loads but symbols not found
 
-Ensure the library was built correctly by checking exported symbols:
+Check the pair together - the shim exports the wrappers, `libcurl-impersonate.so.4` exports the rest:
 ```bash
-nm -D runtimes/linux-x64/native/libcurl-impersonate.so | grep curl
+nm -D --defined-only runtimes/linux-x64/native/libcurl-impersonate.so runtimes/linux-x64/native/libcurl-impersonate.so.4 | grep -E " T curl_(easy_init|easy_perform|easy_impersonate|easy_setopt_long|easy_setopt_str)$"
+ldd runtimes/linux-x64/native/libcurl-impersonate.so   # libcurl-impersonate.so.4 must resolve next to it
 ```
-
-You should see symbols like:
-- `curl_easy_init`
-- `curl_easy_perform`
-- `curl_easy_setopt_long`
-- `curl_easy_setopt_str`
-- `curl_easy_impersonate`

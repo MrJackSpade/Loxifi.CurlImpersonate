@@ -14,9 +14,7 @@ namespace Loxifi.CurlImpersonate
 
         private readonly Dictionary<string, string> _defaultHeaders = new();
 
-        private readonly BrowserProfile _profile;
-
-        private readonly ProfileConfig _profileConfig;
+        private readonly string _impersonateTarget;
 
         private bool _disposed;
 
@@ -26,8 +24,7 @@ namespace Loxifi.CurlImpersonate
         /// <param name="profile">The browser profile to impersonate.</param>
         public CurlClient(BrowserProfile profile)
         {
-            _profile = profile;
-            _profileConfig = BrowserProfileSettings.GetSettings(profile);
+            _impersonateTarget = BrowserProfileTargets.GetTarget(profile);
             _curlProcess = new CurlProcess();
         }
 
@@ -322,7 +319,7 @@ namespace Loxifi.CurlImpersonate
                 AllowAutoRedirect = AllowAutoRedirect,
                 Method = request.Method.Method,
                 Url = url,
-                Profile = _profileConfig,
+                ImpersonateTarget = _impersonateTarget,
                 Headers = headers,
                 Body = body,
                 Timeout = Timeout,

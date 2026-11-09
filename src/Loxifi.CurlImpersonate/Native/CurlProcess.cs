@@ -60,6 +60,10 @@ namespace Loxifi.CurlImpersonate.Native
         {
             using CurlEasy curl = new();
 
+            // Browser fingerprint first: libcurl-impersonate configures TLS, HTTP/2 and the browser's
+            // default headers in one call. Headers added below override defaults of the same name.
+            curl.Impersonate(request.ImpersonateTarget, defaultHeaders: true);
+
             // Basic request setup
             curl.SetUrl(request.Url);
             curl.SetMethod(request.Method);
@@ -99,10 +103,7 @@ namespace Loxifi.CurlImpersonate.Native
                 curl.SetCookie(request.CookieHeader);
             }
 
-            // Apply profile settings
-            ApplyProfileSettings(curl, request.Profile);
-
-            // User headers (override profile headers)
+            // User headers (override the impersonated browser's defaults)
             foreach (KeyValuePair<string, string> header in request.Headers)
             {
                 curl.AddHeader($"{header.Key}: {header.Value}");
@@ -131,125 +132,6 @@ namespace Loxifi.CurlImpersonate.Native
                     $"curl error: {ex.Message}",
                     (int)ex.Code,
                     ex.Message);
-            }
-        }
-
-        private static void ApplyProfileSettings(CurlEasy curl, ProfileConfig profile)
-        {
-            // TLS cipher suites
-            if (!string.IsNullOrEmpty(profile.Ciphers))
-            {
-                curl.SetCiphers(profile.Ciphers);
-            }
-
-            // Elliptic curves
-            if (!string.IsNullOrEmpty(profile.Curves))
-            {
-                curl.SetCurves(profile.Curves);
-            }
-
-            // HTTP/2 settings
-            if (!string.IsNullOrEmpty(profile.Http2Settings))
-            {
-                curl.SetHttp2Settings(profile.Http2Settings);
-            }
-
-            if (profile.Http2WindowUpdate.HasValue)
-            {
-                curl.SetHttp2WindowUpdate(profile.Http2WindowUpdate.Value);
-            }
-
-            if (profile.Http2StreamWeight.HasValue)
-            {
-                curl.SetHttp2StreamWeight(profile.Http2StreamWeight.Value);
-            }
-
-            if (profile.Http2StreamExclusive)
-            {
-                curl.SetHttp2StreamExclusive(true);
-            }
-
-            if (!string.IsNullOrEmpty(profile.Http2PseudoHeadersOrder))
-            {
-                curl.SetHttp2PseudoHeadersOrder(profile.Http2PseudoHeadersOrder);
-            }
-
-            // Compression
-            if (profile.UseCompression)
-            {
-                curl.SetAcceptEncoding("gzip, deflate, br");
-            }
-
-            // HTTP version
-            if (profile.UseHttp2)
-            {
-                curl.SetHttpVersion(CurlHttpVersion.Http2);
-            }
-
-            // ALPS
-            if (profile.UseAlps)
-            {
-                curl.SetEnableAlps(true);
-            }
-
-            // TLS extension permutation
-            if (profile.UsePermuteTlsExtensions)
-            {
-                curl.SetPermuteExtensions(true);
-            }
-
-            // Certificate compression
-            if (!string.IsNullOrEmpty(profile.CertCompression))
-            {
-                curl.SetCertCompression(profile.CertCompression);
-            }
-
-            // TLS GREASE
-            if (profile.UseTlsGrease)
-            {
-                curl.SetTlsGrease(true);
-            }
-
-            // TLS signed certificate timestamps
-            if (profile.UseTlsSignedCertTimestamps)
-            {
-                curl.SetTlsSignedCertTimestamps(true);
-            }
-
-            // Signature hashes
-            if (!string.IsNullOrEmpty(profile.SignatureHashes))
-            {
-                curl.SetSignatureHashes(profile.SignatureHashes);
-            }
-
-            // Delegated credentials
-            if (!string.IsNullOrEmpty(profile.DelegatedCredentials))
-            {
-                curl.SetDelegatedCredentials(profile.DelegatedCredentials);
-            }
-
-            // TLS record size limit
-            if (profile.TlsRecordSizeLimit.HasValue)
-            {
-                curl.SetTlsRecordSizeLimit(profile.TlsRecordSizeLimit.Value);
-            }
-
-            // TLS extension order
-            if (!string.IsNullOrEmpty(profile.TlsExtensionOrder))
-            {
-                curl.SetTlsExtensionOrder(profile.TlsExtensionOrder);
-            }
-
-            // Split cookies
-            if (profile.SplitCookies)
-            {
-                curl.SetSplitCookies(true);
-            }
-
-            // Profile headers
-            foreach (KeyValuePair<string, string> header in profile.Headers)
-            {
-                curl.AddHeader($"{header.Key}: {header.Value}");
             }
         }
     }

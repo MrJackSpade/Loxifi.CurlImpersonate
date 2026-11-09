@@ -5,9 +5,9 @@ echo ========================================
 echo.
 echo This script will:
 echo  1. Download the latest curl-impersonate release
-echo  2. Extract Windows native binaries to runtimes folder
-echo  3. Generate BrowserProfile.cs and BrowserProfileSettings.cs
-echo  4. Build Linux library via WSL (if available)
+echo  2. Extract the Windows native library to the runtimes folder
+echo  3. Generate BrowserProfile.cs and BrowserProfileTargets.cs
+echo  4. Build the Linux library via WSL (if available; otherwise run build/linux/build-shim.sh on Linux)
 echo.
 echo Running code generator...
 echo.

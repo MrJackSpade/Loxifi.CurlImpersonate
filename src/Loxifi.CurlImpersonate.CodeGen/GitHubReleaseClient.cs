@@ -44,12 +44,21 @@ namespace Loxifi.CurlImpersonate.CodeGen
             return await response.Content.ReadAsStreamAsync(cancellationToken);
         }
 
-        public async Task<GitHubRelease> GetLatestReleaseAsync(CancellationToken cancellationToken = default)
+        public Task<GitHubRelease> GetLatestReleaseAsync(CancellationToken cancellationToken = default)
         {
-            string url = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
-            GitHubRelease release = await _httpClient.GetFromJsonAsync<GitHubRelease>(url, cancellationToken)
-                ?? throw new InvalidOperationException("Failed to fetch latest release");
-            return release;
+            return GetAsync("releases/latest", cancellationToken);
+        }
+
+        public Task<GitHubRelease> GetReleaseAsync(string tag, CancellationToken cancellationToken = default)
+        {
+            return GetAsync($"releases/tags/{Uri.EscapeDataString(tag)}", cancellationToken);
+        }
+
+        private async Task<GitHubRelease> GetAsync(string path, CancellationToken cancellationToken)
+        {
+            string url = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/{path}";
+            return await _httpClient.GetFromJsonAsync<GitHubRelease>(url, cancellationToken)
+                ?? throw new InvalidOperationException($"Empty response from {url}");
         }
     }
 

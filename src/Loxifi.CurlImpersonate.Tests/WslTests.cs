@@ -85,7 +85,9 @@ namespace Loxifi.CurlImpersonate.Tests
             string? libPath = GetWslLibraryPath();
             Skip.If(libPath == null, "Could not determine library path");
 
-            var (exitCode, output, _) = WslTestHelper.RunInWsl($"nm -D {libPath}");
+            // The shim exports the variadic wrappers; everything else comes from libcurl-impersonate.so.4,
+            // which the shim loads from its own directory ($ORIGIN). Check the pair together.
+            var (exitCode, output, _) = WslTestHelper.RunInWsl($"nm -D --defined-only {libPath} {libPath}.4");
             Skip.If(exitCode != 0, "Could not read library symbols");
 
             foreach (string symbol in requiredSymbols)
