@@ -184,15 +184,20 @@ namespace Loxifi.CurlImpersonate.Tests
                     string output = listProcess.StandardOutput.ReadToEnd();
                     listProcess.WaitForExit(5000);
 
-                    string[] distros = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+                    // Clean up the distro names (remove null chars from UTF-16 encoding)
+                    string[] distros = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(line => new string(line.Where(c => c != '\0').ToArray()).Trim())
+                        .Where(name => name.Length > 0)
+                        .ToArray();
                     if (distros.Length > 0)
                     {
-                        // Clean up the distro name (remove null chars from UTF-16 encoding)
-                        _wslDistro = new string(distros[0].Where(c => c != '\0').ToArray()).Trim();
+                        _wslDistro = distros[0];
                     }
                 }
 
-                return true;
+                // The wsl.exe launcher can exist with no Linux distribution installed (e.g. GitHub's
+                // windows-latest image); WSL is only usable when at least one distro is present.
+                return _wslDistro != null;
             }
             catch
             {

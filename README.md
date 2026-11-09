@@ -235,7 +235,7 @@ The Linux library is built separately with `build/linux/build-shim.sh` on a Linu
 
 ## Releasing
 
-`.github/workflows/publish.yml` tests every push and PR on Windows and Linux. Pushing a version tag publishes it to nuget.org through NuGet Trusted Publishing (no stored API key):
+Native libraries are built and tested locally (Windows via the code generator, Linux via `build/linux/build-shim.sh`) and committed under `runtimes/`. Pushing a version tag makes `.github/workflows/publish.yml` package the committed binaries and publish to nuget.org through NuGet Trusted Publishing (no stored API key):
 
 ```bash
 # after bumping <Version> in src/Loxifi.CurlImpersonate/Loxifi.CurlImpersonate.csproj
